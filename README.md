@@ -37,7 +37,7 @@ You can deploy this template to Vercel with the button below:
 You can also clone & create this repo locally with the following command:
 
 ```bash
-npx create-next-app liftoff --example "https://github.com/Tameyer41/liftoff"
+npx create-next-app liftoff --example "https://github.com/MohamedArafath205/mock-interviewer.git"
 ```
 
 ## Tech Stack + Features
@@ -82,4 +82,4 @@ We then send the audio directly to be transcribed by OpenAI's Whisper endpoint, 
 
 ## Author
 
-- Tyler Meyer ([@tmeyer_me](https://twitter.com/tmeyer_me))
+- M Mohamed Arafath
