@@ -1,0 +1,8 @@
+spacy>=3.7.2
+SpeechRecognition>=3.10.0
+language-tool-python>=2.9.3
+vaderSentiment>=3.3.2
+PyAudio>=0.2.13  # Required for speech recognition
+
+# Download spaCy English model after installing requirements:
+# python -m spacy download en_core_web_sm 

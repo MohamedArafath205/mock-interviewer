@@ -1,47 +1,34 @@
-from pyspellchecker import SpellChecker
-from textblob import TextBlob
+from language_tool_python import LanguageTool
 import re
-from typing import List, Dict, Optional
-import os
-import tempfile
-import shutil
-import requests
-import zipfile
-import io
+from typing import List, Dict
 
 class GrammarChecker:
     def __init__(self):
-        self.spell = SpellChecker()
+        self.tool = LanguageTool('en-US')
 
     def check_text(self, text: str) -> Dict:
         try:
-            # Split text into sentences
-            sentences = TextBlob(text).sentences
+            # Get grammar and spelling errors
+            matches = self.tool.check(text)
             error_details = []
             total_errors = 0
 
-            for sentence in sentences:
-                # Check spelling
-                words = sentence.words
-                misspelled = self.spell.unknown(words)
-                
-                if misspelled:
-                    for word in misspelled:
-                        suggestions = list(self.spell.candidates(word))
-                        error_details.append({
-                            'sentence': str(sentence),
-                            'error': f"Misspelled word: {word}",
-                            'suggestions': suggestions[:3] if suggestions else []
-                        })
-                        total_errors += 1
+            for match in matches:
+                error_details.append({
+                    'sentence': text[match.offset:match.offset + match.errorLength],
+                    'error': match.message,
+                    'suggestions': match.replacements
+                })
+                total_errors += 1
 
-                # Basic grammar check using TextBlob
-                corrected = str(sentence.correct())
-                if corrected != str(sentence):
+            # Check for common filler words
+            filler_words = ['um', 'uh', 'like', 'you know', 'so', 'actually', 'basically', 'literally']
+            for word in filler_words:
+                if word in text.lower():
                     error_details.append({
-                        'sentence': str(sentence),
-                        'error': "Possible grammar error",
-                        'suggestions': [corrected]
+                        'sentence': text,
+                        'error': f"Filler word detected: {word}",
+                        'suggestions': ["Consider removing filler words for more professional communication"]
                     })
                     total_errors += 1
 
@@ -58,4 +45,4 @@ class GrammarChecker:
             }
 
     def close(self):
-        pass  # No cleanup needed 
+        self.tool.close() 

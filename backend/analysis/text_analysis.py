@@ -1,4 +1,5 @@
-from textblob import TextBlob
+import spacy
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import re
 from typing import Dict, List, Tuple
 
@@ -8,13 +9,17 @@ class TextAnalyzer:
         "I mean", "right", "okay", "well", "hmm"
     }
 
-    def analyze_sentiment(self, text: str) -> str:
-        blob = TextBlob(text)
-        polarity = blob.sentiment.polarity
+    def __init__(self):
+        self.nlp = spacy.load("en_core_web_sm")
+        self.sentiment_analyzer = SentimentIntensityAnalyzer()
 
-        if polarity > 0.05:
+    def analyze_sentiment(self, text: str) -> str:
+        sentiment_scores = self.sentiment_analyzer.polarity_scores(text)
+        compound_score = sentiment_scores['compound']
+
+        if compound_score > 0.05:
             return "Positive"
-        elif polarity < -0.05:
+        elif compound_score < -0.05:
             return "Negative"
         else:
             return "Neutral"
@@ -43,8 +48,8 @@ class TextAnalyzer:
         return pauses
 
     def analyze_text(self, text: str) -> Dict:
-        blob = TextBlob(text)
-        sentences = blob.sentences
+        doc = self.nlp(text)
+        sentences = list(doc.sents)
 
         results = {"Positive": 0, "Negative": 0, "Neutral": 0}
         polarities = []
@@ -58,7 +63,7 @@ class TextAnalyzer:
             sentence_text = str(sentence)
             sentiment = self.analyze_sentiment(sentence_text)
             results[sentiment] += 1
-            polarities.append(sentence.sentiment.polarity)
+            polarities.append(self.sentiment_analyzer.polarity_scores(sentence_text)['compound'])
 
             fillers = self.detect_filler_words(sentence_text)
             pauses = self.detect_pauses(sentence_text)
@@ -72,7 +77,7 @@ class TextAnalyzer:
             sentence_analysis.append({
                 'sentence': sentence_text,
                 'sentiment': sentiment,
-                'polarity_score': sentence.sentiment.polarity,
+                'polarity_score': self.sentiment_analyzer.polarity_scores(sentence_text)['compound'],
                 'filler_words': fillers,
                 'pauses': pauses
             })
@@ -111,3 +116,6 @@ class TextAnalyzer:
                 'summary': pause_summary
             }
         }
+
+    def close(self):
+        pass  # No cleanup needed for spaCy or VADER

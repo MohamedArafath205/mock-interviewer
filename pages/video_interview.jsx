@@ -1,14 +1,17 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/router";
 import Link from "next/link";
 
 const SpeechRecognition = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 export default function VideoInterview({ topic }) {
+  const router = useRouter();
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [transcript, setTranscript] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const recognitionRef = useRef(null);
 
   const videoRef = useRef(null);
@@ -25,6 +28,34 @@ export default function VideoInterview({ topic }) {
     });
     const data = await res.json();
     setQuestions(data.Questions);
+  };
+
+  const analyzeTranscript = async (text) => {
+    if (!text.trim()) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Analysis failed');
+      }
+      
+      const data = await res.json();
+      // Store analysis results in localStorage
+      localStorage.setItem('interviewAnalysis', JSON.stringify(data));
+      // Redirect to results page
+      router.push('/analysis_results');
+    } catch (error) {
+      console.error('Analysis error:', error);
+      alert('Analysis failed. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const requestPermissions = async () => {
@@ -114,13 +145,14 @@ export default function VideoInterview({ topic }) {
 
     recorder.start();
     setIsRecording(true);
-    startRecognition(); // start speech recognition with video
+    startRecognition();
   };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
-    stopRecognition(); // stop speech recognition with video
+    stopRecognition();
+    analyzeTranscript(transcript);
   };
 
   return (
@@ -154,6 +186,12 @@ export default function VideoInterview({ topic }) {
             className="w-full max-w-[1080px] mt-4 p-2 border rounded-md bg-white text-black"
             rows={6}
           />
+
+          {isAnalyzing && (
+            <div className="w-full max-w-[1080px] mt-4 p-4 border rounded-md bg-white">
+              <p className="text-lg text-center">Analyzing your interview...</p>
+            </div>
+          )}
 
           <div className="absolute bottom-[6px] md:bottom-5 left-5 right-5 flex justify-center">
             {isRecording ? (
