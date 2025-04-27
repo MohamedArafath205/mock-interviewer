@@ -33,7 +33,7 @@ export default function VideoInterview({topic}) {
         body: JSON.stringify({ topic }),
       })
       const data = await res.json();
-      setQuestions(data);
+      setQuestions(data.Questions);
       
     }
     
@@ -125,6 +125,10 @@ export default function VideoInterview({topic}) {
 
     return (
     <div className="w-full min-h-screen flex flex-col px-4 pt-2 pb-8 md:px-8 md:py-2 bg-[#FCFCFC] relative overflow-x-hidden"> 
+        <p className="absolute w-full top-0 h-[60px] flex flex-row justify-between -ml-4 md:-ml-8">
+          {questions}
+        </p>
+
         {permissionGranted ? (
             <div className="h-full w-full items-center flex flex-col mt-[10vh]">
                 <motion.div
