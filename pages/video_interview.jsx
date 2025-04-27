@@ -23,6 +23,7 @@ export default function VideoInterview({topic}) {
     const topics = topic
 
     const [questions, setQuestions] = useState([]);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
     const getQuestions = async (topic) => {
       const res = await fetch(`https://chatbot-lqsp.onrender.com/get-questions`, {
@@ -34,7 +35,6 @@ export default function VideoInterview({topic}) {
       })
       const data = await res.json();
       setQuestions(data.Questions);
-      
     }
     
     const requestVideoPermission = async () => {
@@ -123,11 +123,51 @@ export default function VideoInterview({topic}) {
         setIsRecording(false);
       };
 
+    const handleNextQuestion = () => {
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      }
+    };
+
+    const handlePreviousQuestion = () => {
+      if (currentQuestionIndex > 0) {
+        setCurrentQuestionIndex(prevIndex => prevIndex - 1);
+      }
+    };
+
     return (
     <div className="w-full min-h-screen flex flex-col px-4 pt-2 pb-8 md:px-8 md:py-2 bg-[#FCFCFC] relative overflow-x-hidden"> 
-        <p className="absolute w-full top-0 h-[60px] flex flex-row justify-between -ml-4 md:-ml-8">
-          {questions}
-        </p>
+        <div className="absolute w-full top-0 h-[60px] flex flex-row justify-between items-center -ml-4 md:-ml-8 px-4">
+          {questions.length > 0 && (
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={handlePreviousQuestion} 
+                disabled={currentQuestionIndex === 0}
+                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <p className="text-lg font-semibold">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </p>
+              <button 
+                onClick={handleNextQuestion} 
+                disabled={currentQuestionIndex === questions.length - 1}
+                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+
+        {questions.length > 0 && (
+          <div className="mt-[80px] text-center">
+            <h2 className="text-2xl font-bold mb-4">
+              {questions[currentQuestionIndex]}
+            </h2>
+          </div>
+        )}
 
         {permissionGranted ? (
             <div className="h-full w-full items-center flex flex-col mt-[10vh]">
